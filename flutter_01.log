@@ -1,0 +1,87 @@
+Flutter crash report.
+Please report a bug at https://github.com/flutter/flutter/issues.
+
+## command
+
+flutter --no-color pub get
+
+## exception
+
+FileSystemException: FileSystemException: Deletion failed, path = 'D:\flutter_projects\yelo_date_range_calendar\.android' (OS Error: The directory is not empty.
+, errno = 145)
+
+```
+#0      _Directory._deleteSync (dart:io/directory_impl.dart:201:7)
+#1      FileSystemEntity.deleteSync (dart:io/file_system_entity.dart:408:7)
+#2      ForwardingFileSystemEntity.deleteSync (package:file/src/forwarding/forwarding_file_system_entity.dart:70:16)
+#3      ErrorHandlingDirectory.deleteSync.<anonymous closure> (package:flutter_tools/src/base/error_handling_io.dart:486:22)
+#4      _runSync (package:flutter_tools/src/base/error_handling_io.dart:597:14)
+#5      ErrorHandlingDirectory.deleteSync (package:flutter_tools/src/base/error_handling_io.dart:485:12)
+#6      ErrorHandlingFileSystem.deleteIfExists (package:flutter_tools/src/base/error_handling_io.dart:82:12)
+#7      AndroidProject._regenerateLibrary (package:flutter_tools/src/project.dart:528:29)
+#8      AndroidProject.ensureReadyForPlatformSpecificTooling (package:flutter_tools/src/project.dart:503:13)
+#9      FlutterProject.ensureReadyForPlatformSpecificTooling (package:flutter_tools/src/project.dart:318:21)
+<asynchronous suspension>
+#10     PackagesGetCommand.runCommand (package:flutter_tools/src/commands/packages.dart:173:5)
+<asynchronous suspension>
+#11     FlutterCommand.run.<anonymous closure> (package:flutter_tools/src/runner/flutter_command.dart:1125:27)
+<asynchronous suspension>
+#12     AppContext.run.<anonymous closure> (package:flutter_tools/src/base/context.dart:150:19)
+<asynchronous suspension>
+#13     CommandRunner.runCommand (package:args/command_runner.dart:209:13)
+<asynchronous suspension>
+#14     FlutterCommandRunner.runCommand.<anonymous closure> (package:flutter_tools/src/runner/flutter_command_runner.dart:288:9)
+<asynchronous suspension>
+#15     AppContext.run.<anonymous closure> (package:flutter_tools/src/base/context.dart:150:19)
+<asynchronous suspension>
+#16     FlutterCommandRunner.runCommand (package:flutter_tools/src/runner/flutter_command_runner.dart:236:5)
+<asynchronous suspension>
+#17     run.<anonymous closure>.<anonymous closure> (package:flutter_tools/runner.dart:62:9)
+<asynchronous suspension>
+#18     AppContext.run.<anonymous closure> (package:flutter_tools/src/base/context.dart:150:19)
+<asynchronous suspension>
+#19     main (package:flutter_tools/executable.dart:92:3)
+<asynchronous suspension>
+```
+
+## flutter doctor
+
+```
+[✓] Flutter (Channel dev, 2.5.0-6.0.pre, on Microsoft Windows [Version 10.0.18363.1734], locale en-US)
+    • Flutter version 2.5.0-6.0.pre at D:\flutter
+    • Upstream repository https://github.com/flutter/flutter.git
+    • Framework revision 225a43d941 (2 months ago), 2021-08-05 11:32:48 -0700
+    • Engine revision 07ec4b82c7
+    • Dart version 2.14.0 (build 2.14.0-383.0.dev)
+
+[✓] Android toolchain - develop for Android devices (Android SDK version 31.0.0-rc5)
+    • Android SDK at D:\android_sdk
+    • Platform android-31, build-tools 31.0.0-rc5
+    • ANDROID_HOME = D:\android_sdk
+    • ANDROID_SDK_ROOT = D:\android_sdk
+    • Java binary at: C:\Program Files\Android\Android Studio\jre\bin\java
+    • Java version OpenJDK Runtime Environment (build 11.0.8+10-b944.6842174)
+    • All Android licenses accepted.
+
+[✓] Chrome - develop for the web
+    • Chrome at C:\Program Files (x86)\Google\Chrome\Application\chrome.exe
+
+[✓] Android Studio (version 4.2)
+    • Android Studio at C:\Program Files\Android\Android Studio
+    • Flutter plugin can be installed from:
+      🔨 https://plugins.jetbrains.com/plugin/9212-flutter
+    • Dart plugin can be installed from:
+      🔨 https://plugins.jetbrains.com/plugin/6351-dart
+    • Java version OpenJDK Runtime Environment (build 11.0.8+10-b944.6842174)
+
+[✓] VS Code (version 1.59.0)
+    • VS Code at C:\Users\al.osama.WEFAQ\AppData\Local\Programs\Microsoft VS Code
+    • Flutter extension version 3.25.0
+
+[✓] Connected device (3 available)
+    • SM A715F (mobile) • RZ8N804GZBE • android-arm64  • Android 11 (API 30)
+    • Chrome (web)      • chrome      • web-javascript • Google Chrome 94.0.4606.81
+    • Edge (web)        • edge        • web-javascript • Microsoft Edge 93.0.961.52
+
+• No issues found!
+```
