@@ -1,12 +1,17 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import 'package:syncfusion_flutter_datepicker/datepicker.dart';
 import 'package:yelo_date_range_calendar/date_util.dart';
 import 'dart:ui';
 
-void main() => runApp(chooseRoute(window.defaultRouteName));
+@pragma("vm:entry-point")
+void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  runApp(chooseRoute(window.defaultRouteName));
+}
 
 Widget chooseRoute(String route) {
   switch (route) {
@@ -18,13 +23,13 @@ Widget chooseRoute(String route) {
 }
 
 class MyApp extends StatefulWidget {
-
   @override
   State<MyApp> createState() => _MyAppState();
 }
 
-class _MyAppState extends State<MyApp> {
-  DateTime? minDate, maxDate;
+class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
+  AppLifecycleState? appLifecycleState;
+  DateTime? minDate, maxDate, selectedPickupDate, selectedDropOffDate;
 
   final methodChannel = const MethodChannel('yelo.calendar/rangeCalendar2');
 
@@ -32,80 +37,151 @@ class _MyAppState extends State<MyApp> {
 
   final receiveMinMaxDatesMethodName = "receiveMinMaxDatesMethodName";
 
+  final resetCalendarMethodName = "resetCalendarMethodName";
+
   final START_DATE = "START_DATE";
 
   final END_DATE = "END_DATE";
 
-  final MIN_DATE = "MIN_DATE";
+  final MINIMUM_DATE = "minimum_pickup_date";
 
-  final MAX_DATE = "MAX_DATE";
+  final MAXIMUM_DATE = "maximum_drop_off_date";
+
+  final CHOSEN_START_DATE = "chosen_start_date";
+
+  final CHOSEN_END_DATE = "chosen_end_date";
+
+  DateRangePickerController _controller = DateRangePickerController();
 
   @override
   void initState() {
+    WidgetsBinding.instance!.addObserver(this);
     super.initState();
-    print("Flutter: MyApp: initState");
-
-    getMinMaxDates();
+    onReceiveMinMaxDates();
   }
 
-  void getMinMaxDates() async {
-    print("Flutter: MyApp: getMinMaxDates");
+  @override
+  void dispose() {
+    WidgetsBinding.instance!.removeObserver(this);
+    super.dispose();
+  }
 
-    await methodChannel.invokeMethod(receiveMinMaxDatesMethodName)
-        .then((channelResult) {
-      if (channelResult != null && channelResult.toString().isNotEmpty) {
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    setState(() {
+      appLifecycleState = state;
+    });
+  }
+
+  void onReceiveMinMaxDates() async {
+
+    methodChannel.setMethodCallHandler((call) async {
+      if (call.method == receiveMinMaxDatesMethodName &&
+          call.arguments != null &&
+          call.arguments.isNotEmpty) {
         var channelResultMap =
-            jsonDecode(channelResult) as Map<String, dynamic>;
-          if (channelResultMap[MIN_DATE] != null && channelResultMap[MIN_DATE].toString().isNotEmpty) {
-            setState(() {
-              print("Flutter: MyApp: getMinMaxDates: setState");
+        jsonDecode(call.arguments) as Map<String, dynamic>;
+
+          setState(() {
+            if (channelResultMap[MINIMUM_DATE] != null &&
+                channelResultMap[MINIMUM_DATE]
+                    .toString()
+                    .isNotEmpty) {
               minDate = DateUtil.parseStringToDate(
-                channelResultMap[MIN_DATE].toString(),
-                DateUtil.dashLongDateFormat);
-            maxDate = DateUtil.parseStringToDate(
-                channelResultMap[MAX_DATE].toString(),
-                DateUtil.dashLongDateFormat);
-            });
-          }
+                  channelResultMap[MINIMUM_DATE], DateUtil.dashLongDateFormat);
+            }
+            if (channelResultMap[MAXIMUM_DATE] != null &&
+                channelResultMap[MAXIMUM_DATE]
+                    .toString()
+                    .isNotEmpty) {
+              maxDate = DateUtil.parseStringToDate(
+                  channelResultMap[MAXIMUM_DATE], DateUtil.dashLongDateFormat);
+            }
+            if (channelResultMap[CHOSEN_START_DATE] != null &&
+                channelResultMap[CHOSEN_START_DATE]
+                    .toString()
+                    .isNotEmpty) {
+              selectedPickupDate = DateUtil.parseStringToDate(
+                  channelResultMap[CHOSEN_START_DATE].toString(),
+                  DateUtil.dashLongDateFormat);
+            }
+            if (channelResultMap[CHOSEN_END_DATE] != null &&
+                channelResultMap[CHOSEN_END_DATE]
+                    .toString()
+                    .isNotEmpty) {
+              selectedDropOffDate = DateUtil.parseStringToDate(
+                  channelResultMap[CHOSEN_END_DATE].toString(),
+                  DateUtil.dashLongDateFormat);
+            }
+            if (selectedPickupDate != null && selectedDropOffDate != null) {
+              setState(() {
+                SchedulerBinding.instance!
+                    .addPostFrameCallback((Duration duration) {
+                  _controller.selectedRange =
+                      PickerDateRange(selectedPickupDate, selectedDropOffDate);
+                });
+              });
+            }
+
+          });
+      }else  if (call.method == resetCalendarMethodName) {
+        resetCalendar();
       }
     });
   }
 
+  void resetCalendar() {
+        setState(() {
+          SchedulerBinding.instance!
+              .addPostFrameCallback((Duration duration) {
+            _controller.selectedRange = null;
+          });
+        });
+      }
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
-      home: Scaffold(
-        body: SafeArea(
-            child: SfDateRangePicker(
-          view: DateRangePickerView.month,
-          selectionMode: DateRangePickerSelectionMode.range,
-          rangeSelectionColor: const Color(0xff50266F),
-          selectionRadius: 17,
-          backgroundColor: Colors.white,
-          rangeTextStyle:
-              const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-          headerStyle: const DateRangePickerHeaderStyle(
-              backgroundColor: Color(0xffFAFAFA),
-              textStyle: TextStyle(
-                color: Colors.black,
-                fontWeight: FontWeight.bold,
-              )),
-          startRangeSelectionColor: const Color(0xff50266F),
-          endRangeSelectionColor: const Color(0xff50266F),
-          viewSpacing: 1,
-          navigationDirection: DateRangePickerNavigationDirection.vertical,
-          showNavigationArrow: false,
-          allowViewNavigation: true,
-          enableMultiView: true,
-          showActionButtons: false,
-          minDate: minDate,
-          maxDate: maxDate,
-          navigationMode: DateRangePickerNavigationMode.scroll,
-          monthViewSettings:
-              const DateRangePickerMonthViewSettings(dayFormat: "EEE"),
-          onSelectionChanged: _onSelectionChanged,
-        )),
+      debugShowCheckedModeBanner: false,
+      home: WillPopScope(
+        onWillPop: () async => false,
+        child: Scaffold(
+          body: SafeArea(
+            child: Container(
+              child: SfDateRangePicker(
+                controller: _controller,
+                view: DateRangePickerView.month,
+                selectionMode: DateRangePickerSelectionMode.range,
+                rangeSelectionColor: const Color(0xff50266F),
+                selectionRadius: 17,
+                backgroundColor: Colors.white,
+                rangeTextStyle: const TextStyle(
+                    color: Colors.white, fontWeight: FontWeight.bold),
+                headerStyle: const DateRangePickerHeaderStyle(
+                    backgroundColor: Color(0xffFAFAFA),
+                    textStyle: TextStyle(
+                      color: Colors.black,
+                      fontWeight: FontWeight.bold,
+                    )),
+                startRangeSelectionColor: const Color(0xff50266F),
+                endRangeSelectionColor: const Color(0xff50266F),
+                viewSpacing: 1,
+                navigationDirection:
+                DateRangePickerNavigationDirection.vertical,
+                showNavigationArrow: false,
+                allowViewNavigation: true,
+                enableMultiView: true,
+                showActionButtons: false,
+                minDate: minDate,
+                maxDate: maxDate,
+                navigationMode: DateRangePickerNavigationMode.scroll,
+                monthViewSettings:
+                const DateRangePickerMonthViewSettings(dayFormat: "EEE"),
+                onSelectionChanged: _onSelectionChanged,
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -127,9 +203,12 @@ class _MyAppState extends State<MyApp> {
   void sendDateRangesToNative(
       {required DateTime? startDate, required DateTime? endDate}) {
     methodChannel.invokeMethod(sendSelectedDateRangesMethodName, {
-      START_DATE:
-          startDate != null ? DateUtil.formatDate(DateUtil.dashLongDateTimeFormatMS, startDate) : null,
-      END_DATE: endDate != null ? DateUtil.formatDate(DateUtil.dashLongDateTimeFormatMS, endDate) : null
+      START_DATE: startDate != null
+          ? DateUtil.formatDate(DateUtil.dashLongDateFormatWithZ, startDate)
+          : null,
+      END_DATE: endDate != null
+          ? DateUtil.formatDate(DateUtil.dashLongDateFormatWithZ, endDate)
+          : null
     });
   }
 }
