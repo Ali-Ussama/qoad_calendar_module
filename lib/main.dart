@@ -1,9 +1,11 @@
 import 'dart:convert';
+import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import 'package:syncfusion_flutter_datepicker/datepicker.dart';
+import 'package:yelo_date_range_calendar/color_utils.dart';
 import 'package:yelo_date_range_calendar/date_util.dart';
 import 'dart:ui';
 
@@ -30,7 +32,10 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   AppLifecycleState? appLifecycleState;
   DateTime? minDate, maxDate, selectedPickupDate, selectedDropOffDate;
-
+  Color? calendarBackgroundColor,
+      calendarTextColor,
+      selectedRangeBackgroundColor,
+      selectedRangeTextColor;
   final methodChannel = const MethodChannel('yelo.calendar/rangeCalendar2');
 
   final sendSelectedDateRangesMethodName = "sendSelectedDateRangesMethodName";
@@ -50,6 +55,14 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   final CHOSEN_START_DATE = "chosen_start_date";
 
   final CHOSEN_END_DATE = "chosen_end_date";
+
+  final CALENDAR_BACKGROUND_COLOR = "calendar_background_color";
+
+  final CALENDAR_TEXT_COLOR = "calendar_text_color";
+
+  final SELECTED_RANGE_BACKGROUND_COLOR = "selected_range_background_color";
+
+  final SELECTED_RANGE_TEXT_COLOR = "selected_range_text_color";
 
   DateRangePickerController _controller = DateRangePickerController();
 
@@ -74,70 +87,31 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   }
 
   void onReceiveMinMaxDates() async {
-
     methodChannel.setMethodCallHandler((call) async {
       if (call.method == receiveMinMaxDatesMethodName &&
           call.arguments != null &&
           call.arguments.isNotEmpty) {
         var channelResultMap =
-        jsonDecode(call.arguments) as Map<String, dynamic>;
+            jsonDecode(call.arguments) as Map<String, dynamic>;
 
-          setState(() {
-            if (channelResultMap[MINIMUM_DATE] != null &&
-                channelResultMap[MINIMUM_DATE]
-                    .toString()
-                    .isNotEmpty) {
-              minDate = DateUtil.parseStringToDate(
-                  channelResultMap[MINIMUM_DATE], DateUtil.dashLongDateFormat);
-            }
-            if (channelResultMap[MAXIMUM_DATE] != null &&
-                channelResultMap[MAXIMUM_DATE]
-                    .toString()
-                    .isNotEmpty) {
-              maxDate = DateUtil.parseStringToDate(
-                  channelResultMap[MAXIMUM_DATE], DateUtil.dashLongDateFormat);
-            }
-            if (channelResultMap[CHOSEN_START_DATE] != null &&
-                channelResultMap[CHOSEN_START_DATE]
-                    .toString()
-                    .isNotEmpty) {
-              selectedPickupDate = DateUtil.parseStringToDate(
-                  channelResultMap[CHOSEN_START_DATE].toString(),
-                  DateUtil.dashLongDateFormat);
-            }
-            if (channelResultMap[CHOSEN_END_DATE] != null &&
-                channelResultMap[CHOSEN_END_DATE]
-                    .toString()
-                    .isNotEmpty) {
-              selectedDropOffDate = DateUtil.parseStringToDate(
-                  channelResultMap[CHOSEN_END_DATE].toString(),
-                  DateUtil.dashLongDateFormat);
-            }
-            if (selectedPickupDate != null && selectedDropOffDate != null) {
-              setState(() {
-                SchedulerBinding.instance!
-                    .addPostFrameCallback((Duration duration) {
-                  _controller.selectedRange =
-                      PickerDateRange(selectedPickupDate, selectedDropOffDate);
-                });
-              });
-            }
+        setState(() {
+          parseColorsConfigurations(channelResultMap);
 
-          });
-      }else  if (call.method == resetCalendarMethodName) {
+          parseDateConfigurations(channelResultMap);
+        });
+      } else if (call.method == resetCalendarMethodName) {
         resetCalendar();
       }
     });
   }
 
   void resetCalendar() {
-        setState(() {
-          SchedulerBinding.instance!
-              .addPostFrameCallback((Duration duration) {
-            _controller.selectedRange = null;
-          });
-        });
-      }
+    setState(() {
+      SchedulerBinding.instance!.addPostFrameCallback((Duration duration) {
+        _controller.selectedRange = null;
+      });
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -152,22 +126,29 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
                 controller: _controller,
                 view: DateRangePickerView.month,
                 selectionMode: DateRangePickerSelectionMode.range,
-                rangeSelectionColor: const Color(0xff50266F),
+                rangeSelectionColor: selectedRangeBackgroundColor ??
+                    ColorUtils.rangeSelectionColor,
                 selectionRadius: 17,
-                backgroundColor: Colors.white,
-                rangeTextStyle: const TextStyle(
-                    color: Colors.white, fontWeight: FontWeight.bold),
-                headerStyle: const DateRangePickerHeaderStyle(
-                    backgroundColor: Color(0xffFAFAFA),
+                backgroundColor: calendarBackgroundColor ??
+                    ColorUtils.calendarBackgroundColor,
+                rangeTextStyle: TextStyle(
+                    color: selectedRangeTextColor ??
+                        ColorUtils.rangeSelectionTextColor,
+                    fontWeight: FontWeight.bold),
+                headerStyle: DateRangePickerHeaderStyle(
+                    backgroundColor: calendarBackgroundColor ??
+                        ColorUtils.calendarBackgroundColor,
                     textStyle: TextStyle(
-                      color: Colors.black,
+                      color: calendarTextColor ?? ColorUtils.calendarTextColor,
                       fontWeight: FontWeight.bold,
                     )),
-                startRangeSelectionColor: const Color(0xff50266F),
-                endRangeSelectionColor: const Color(0xff50266F),
+                startRangeSelectionColor: selectedRangeBackgroundColor ??
+                    ColorUtils.rangeSelectionColor,
+                endRangeSelectionColor: selectedRangeBackgroundColor ??
+                    ColorUtils.rangeSelectionColor,
                 viewSpacing: 1,
                 navigationDirection:
-                DateRangePickerNavigationDirection.vertical,
+                    DateRangePickerNavigationDirection.vertical,
                 showNavigationArrow: false,
                 allowViewNavigation: true,
                 enableMultiView: true,
@@ -176,7 +157,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
                 maxDate: maxDate,
                 navigationMode: DateRangePickerNavigationMode.scroll,
                 monthViewSettings:
-                const DateRangePickerMonthViewSettings(dayFormat: "EEE"),
+                    const DateRangePickerMonthViewSettings(dayFormat: "EEE"),
                 onSelectionChanged: _onSelectionChanged,
               ),
             ),
@@ -210,5 +191,74 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
           ? DateUtil.formatDate(DateUtil.dashLongDateFormatWithZ, endDate)
           : null
     });
+  }
+
+  void parseColorsConfigurations(Map<String, dynamic> channelResultMap) {
+    try {
+      if (channelResultMap[CALENDAR_BACKGROUND_COLOR] != null &&
+          channelResultMap[CALENDAR_BACKGROUND_COLOR].toString().isNotEmpty) {
+        calendarBackgroundColor = ColorUtils.fromHex(
+            channelResultMap[CALENDAR_BACKGROUND_COLOR].toString());
+      }
+
+      if (channelResultMap[CALENDAR_TEXT_COLOR] != null &&
+          channelResultMap[CALENDAR_TEXT_COLOR].toString().isNotEmpty) {
+        calendarTextColor = ColorUtils.fromHex(
+            channelResultMap[CALENDAR_TEXT_COLOR].toString());
+      }
+
+      if (channelResultMap[SELECTED_RANGE_BACKGROUND_COLOR] != null &&
+          channelResultMap[SELECTED_RANGE_BACKGROUND_COLOR]
+              .toString()
+              .isNotEmpty) {
+        selectedRangeBackgroundColor = ColorUtils.fromHex(
+            channelResultMap[SELECTED_RANGE_BACKGROUND_COLOR].toString());
+      }
+
+      if (channelResultMap[SELECTED_RANGE_TEXT_COLOR] != null &&
+          channelResultMap[SELECTED_RANGE_TEXT_COLOR].toString().isNotEmpty) {
+        selectedRangeTextColor = ColorUtils.fromHex(
+            channelResultMap[SELECTED_RANGE_TEXT_COLOR].toString());
+      }
+    } catch (e) {
+      log(e.toString());
+    }
+  }
+
+  void parseDateConfigurations(Map<String, dynamic> channelResultMap) {
+    try {
+      if (channelResultMap[MINIMUM_DATE] != null &&
+          channelResultMap[MINIMUM_DATE].toString().isNotEmpty) {
+        minDate = DateUtil.parseStringToDate(
+            channelResultMap[MINIMUM_DATE], DateUtil.dashLongDateFormat);
+      }
+      if (channelResultMap[MAXIMUM_DATE] != null &&
+          channelResultMap[MAXIMUM_DATE].toString().isNotEmpty) {
+        maxDate = DateUtil.parseStringToDate(
+            channelResultMap[MAXIMUM_DATE], DateUtil.dashLongDateFormat);
+      }
+      if (channelResultMap[CHOSEN_START_DATE] != null &&
+          channelResultMap[CHOSEN_START_DATE].toString().isNotEmpty) {
+        selectedPickupDate = DateUtil.parseStringToDate(
+            channelResultMap[CHOSEN_START_DATE].toString(),
+            DateUtil.dashLongDateFormat);
+      }
+      if (channelResultMap[CHOSEN_END_DATE] != null &&
+          channelResultMap[CHOSEN_END_DATE].toString().isNotEmpty) {
+        selectedDropOffDate = DateUtil.parseStringToDate(
+            channelResultMap[CHOSEN_END_DATE].toString(),
+            DateUtil.dashLongDateFormat);
+      }
+      if (selectedPickupDate != null && selectedDropOffDate != null) {
+        setState(() {
+          SchedulerBinding.instance!.addPostFrameCallback((Duration duration) {
+            _controller.selectedRange =
+                PickerDateRange(selectedPickupDate, selectedDropOffDate);
+          });
+        });
+      }
+    } catch (e) {
+      log(e.toString());
+    }
   }
 }
