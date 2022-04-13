@@ -31,7 +31,10 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   AppLifecycleState? appLifecycleState;
-  DateTime? minDate = DateTime.now(), maxDate, selectedPickupDate, selectedDropOffDate;
+  DateTime? minDate = DateTime.now(),
+      maxDate,
+      selectedPickupDate,
+      selectedDropOffDate;
   Color? calendarBackgroundColor,
       calendarTextColor,
       selectedRangeBackgroundColor,
@@ -162,7 +165,8 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
                 minDate: minDate,
                 maxDate: maxDate,
                 monthCellStyle: DateRangePickerMonthCellStyle(
-                  textStyle: TextStyle(color: calendarTextColor ?? ColorUtils.calendarTextColor),
+                  textStyle: TextStyle(
+                      color: calendarTextColor ?? ColorUtils.calendarTextColor),
                   disabledDatesTextStyle: const TextStyle(color: Colors.grey),
                 ),
                 navigationMode: DateRangePickerNavigationMode.scroll,
