@@ -31,7 +31,7 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   AppLifecycleState? appLifecycleState;
-  DateTime? minDate, maxDate, selectedPickupDate, selectedDropOffDate;
+  DateTime? minDate = DateTime.now(), maxDate, selectedPickupDate, selectedDropOffDate;
   Color? calendarBackgroundColor,
       calendarTextColor,
       selectedRangeBackgroundColor,
@@ -126,7 +126,10 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
                 controller: _controller,
                 view: DateRangePickerView.month,
                 selectionMode: DateRangePickerSelectionMode.range,
+                monthFormat: "MMM",
                 rangeSelectionColor: selectedRangeBackgroundColor ??
+                    ColorUtils.rangeSelectionColor,
+                todayHighlightColor: selectedRangeBackgroundColor ??
                     ColorUtils.rangeSelectionColor,
                 selectionRadius: 17,
                 backgroundColor: calendarBackgroundColor ??
@@ -146,6 +149,9 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
                     ColorUtils.rangeSelectionColor,
                 endRangeSelectionColor: selectedRangeBackgroundColor ??
                     ColorUtils.rangeSelectionColor,
+                selectionTextStyle: TextStyle(
+                    color: selectedRangeTextColor ??
+                        ColorUtils.rangeSelectionTextColor),
                 viewSpacing: 1,
                 navigationDirection:
                     DateRangePickerNavigationDirection.vertical,
@@ -155,9 +161,14 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
                 showActionButtons: false,
                 minDate: minDate,
                 maxDate: maxDate,
+                monthCellStyle: DateRangePickerMonthCellStyle(
+                  textStyle: TextStyle(color: calendarTextColor ?? ColorUtils.calendarTextColor),
+                  disabledDatesTextStyle: const TextStyle(color: Colors.grey),
+                ),
                 navigationMode: DateRangePickerNavigationMode.scroll,
-                monthViewSettings:
-                    const DateRangePickerMonthViewSettings(dayFormat: "EEE"),
+                monthViewSettings: const DateRangePickerMonthViewSettings(
+                  dayFormat: "EEE",
+                ),
                 onSelectionChanged: _onSelectionChanged,
               ),
             ),
@@ -172,12 +183,6 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
       DateTime? rangeStartDate = args.value.startDate;
       DateTime? rangeEndDate = args.value.endDate;
       sendDateRangesToNative(startDate: rangeStartDate, endDate: rangeEndDate);
-    } else if (args.value is DateTime) {
-      final DateTime selectedDate = args.value;
-    } else if (args.value is List) {
-      final List selectedDates = args.value;
-    } else {
-      final dynamic selectedRanges = args.value;
     }
   }
 

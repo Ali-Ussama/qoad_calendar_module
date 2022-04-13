@@ -18,15 +18,13 @@ extension ColorUtils on Color {
       '${green.toRadixString(16).padLeft(2, '0')}'
       '${blue.toRadixString(16).padLeft(2, '0')}';
 
-  static Color calendarBackgroundColor = white;
+  static Color calendarBackgroundColor = const Color(0xff282828);
 
-  static Color rangeSelectionColor = const Color(0xff50266F);
+  static Color rangeSelectionColor = const Color(0xffffffff);
 
-  static Color rangeSelectionTextColor = white;
+  static Color rangeSelectionTextColor = Colors.black;
 
   static Color white = Colors.white;
 
-  static Color calendarTextColor = Colors.black;
-
-
+  static Color calendarTextColor = white;
 }
