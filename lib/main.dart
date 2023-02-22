@@ -170,8 +170,13 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
                   disabledDatesTextStyle: const TextStyle(color: Colors.grey),
                 ),
                 navigationMode: DateRangePickerNavigationMode.scroll,
-                monthViewSettings: const DateRangePickerMonthViewSettings(
+                monthViewSettings: DateRangePickerMonthViewSettings(
                   dayFormat: "EEE",
+                    viewHeaderStyle: DateRangePickerViewHeaderStyle(
+                    textStyle: TextStyle(
+                      color: calendarTextColor ?? ColorUtils.calendarTextColor
+                    )
+                )
                 ),
                 onSelectionChanged: _onSelectionChanged,
               ),
